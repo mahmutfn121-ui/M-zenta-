@@ -1,0 +1,444 @@
+```html
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#030303" />
+  <title>Müzenta • Müziğin En Güzel Hali</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            ytBg: '#030303',
+            ytSurface: '#0f0f13',
+            ytCard: '#16161d',
+            ytHover: '#22222c',
+            neonCyan: '#00f5d4',
+            neonPurple: '#9b5de5',
+            neonPink: '#f15bb5',
+          },
+          boxShadow: {
+            neonCyan: '0 0 24px rgba(0, 245, 212, 0.25)',
+            neonPurple: '0 0 28px rgba(155, 93, 229, 0.28)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      background-color: #030303;
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Özel Kaydırma Çubukları */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #030303;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #272734;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00f5d4;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* YouTube Music Tarzı Seekbar ve Ses Slider */
+    input[type="range"].yt-seek {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"].yt-seek::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.18);
+    }
+    input[type="range"].yt-seek:hover::-webkit-slider-runnable-track {
+      height: 6px;
+    }
+    input[type="range"].yt-seek::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      background: #00f5d4;
+      margin-top: -5px;
+      box-shadow: 0 0 12px rgba(0, 245, 212, 0.85);
+      transition: transform 0.15s ease;
+    }
+    input[type="range"].yt-seek:hover::-webkit-slider-thumb {
+      transform: scale(1.25);
+    }
+
+    /* Tam Ekran Şimdi Çalıyor Katmanı */
+    .now-playing-drawer {
+      transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    }
+    .now-playing-drawer.closed {
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .now-playing-drawer.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Müzik Çalıyor Ekolayzır Çubuğu Animasyonu */
+    @keyframes eqBounce {
+      0%, 100% { height: 25%; }
+      50% { height: 95%; }
+    }
+    .eq-bar-1 { animation: eqBounce 0.7s ease-in-out infinite; }
+    .eq-bar-2 { animation: eqBounce 0.55s ease-in-out infinite 0.15s; }
+    .eq-bar-3 { animation: eqBounce 0.8s ease-in-out infinite 0.3s; }
+  </style>
+</head>
+<body class="bg-ytBg text-slate-100 min-h-screen flex flex-col select-none">
+
+  <!-- ===================================================================
+       1. ÜST ÇUBUK (HEADER) - YOUTUBE MUSIC STİLİ
+  ==================================================================== -->
+  <header class="sticky top-0 z-40 h-16 bg-ytBg/90 backdrop-blur-xl border-b border-white/10 px-3 sm:px-6 flex items-center justify-between gap-3">
+    <!-- Sol: Hamburger (Masaüstü daraltma) + Özel SVG Müzenta Logosu -->
+    <div class="flex items-center gap-3 shrink-0">
+      <button
+        id="desktopSidebarToggle"
+        type="button"
+        aria-label="Menüyü aç/kapat"
+        class="hidden lg:flex p-2.5 rounded-full hover:bg-white/10 text-slate-300 transition"
+      >
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+
+      <a href="#ana-sayfa" id="brandLogoHomeBtn" class="flex items-center gap-2.5 group">
+        <!-- Özel SVG Müzenta Logosu (Kulaklık + Neon Mor-Turkuaz M Harfi Notası) -->
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-neonPurple/30 via-ytCard to-neonCyan/30 p-0.5 border border-white/15 shadow-neonPurple group-hover:scale-105 transition">
+          <svg viewBox="0 0 120 120" class="w-full h-full rounded-[14px]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="muzentaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#9b5de5" />
+                <stop offset="50%" stop-color="#4ea8de" />
+                <stop offset="100%" stop-color="#00f5d4" />
+              </linearGradient>
+            </defs>
+            <rect width="120" height="120" rx="26" fill="#090a12" />
+            <!-- Kulaklık Kavis -->
+            <path d="M26 62 C26 32, 94 32, 94 62" fill="none" stroke="url(#muzentaGrad)" stroke-width="7" stroke-linecap="round" />
+            <!-- Kulaklık Pedleri -->
+            <rect x="18" y="54" width="13" height="28" rx="6" fill="#181a28" stroke="#9b5de5" stroke-width="3" />
+            <rect x="89" y="54" width="13" height="28" rx="6" fill="#181a28" stroke="#00f5d4" stroke-width="3" />
+            <!-- M Harfi Nota Gövdesi -->
+            <path d="M40 82 L40 48 L60 63 L80 48 L80 82" fill="none" stroke="url(#muzentaGrad)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+            <!-- Nota Başları -->
+            <ellipse cx="35" cy="84" rx="9" ry="6.5" transform="rotate(-18 35 84)" fill="#9b5de5" />
+            <ellipse cx="75" cy="84" rx="9" ry="6.5" transform="rotate(-18 75 84)" fill="#00f5d4" />
+          </svg>
+        </div>
+        <div class="leading-none">
+          <div class="flex items-center gap-1.5">
+            <span class="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-neonCyan bg-clip-text text-transparent">
+              Müzenta
+            </span>
+          </div>
+          <span class="hidden sm:block text-[10px] font-medium text-slate-400 tracking-wide mt-0.5">
+            Müziğin En Güzel Hali
+          </span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Orta: Genişleyebilen Modern Arama Çubuğu -->
+    <div class="flex-1 max-w-xl mx-2">
+      <div class="relative flex items-center">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none"></i>
+        <input
+          id="globalSearchInput"
+          type="text"
+          placeholder="Şarkı, sanatçı veya video ara..."
+          class="w-full pl-10 pr-10 py-2.5 rounded-full bg-ytCard/90 hover:bg-ytHover focus:bg-ytSurface border border-white/10 focus:border-neonCyan text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-neonCyan/25 transition"
+        />
+        <button
+          id="clearSearchBtn"
+          type="button"
+          aria-label="Aramayı temizle"
+          class="hidden absolute right-3 p-1 rounded-full text-slate-400 hover:text-white"
+        >
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sağ: Yükle Kısayolu, Bildirimler & Kullanıcı Profil Avatarı -->
+    <div class="flex items-center gap-2 shrink-0">
+      <button
+        id="headerQuickUploadBtn"
+        type="button"
+        class="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-gradient-to-r from-neonPurple to-neonCyan text-slate-950 font-extrabold text-xs shadow-neonCyan hover:opacity-95 active:scale-95 transition"
+      >
+        <i data-lucide="upload" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">Yükle</span>
+      </button>
+
+      <button
+        id="headerNotifBtn"
+        type="button"
+        title="Bildirimler"
+        class="relative p-2.5 rounded-full bg-ytCard hover:bg-ytHover border border-white/10 text-slate-300 hover:text-white transition"
+      >
+        <i data-lucide="bell" class="w-4 h-4"></i>
+        <span class="w-2 h-2 rounded-full bg-neonCyan absolute top-2 right-2"></span>
+      </button>
+
+      <button
+        id="headerProfileBtn"
+        type="button"
+        title="Profil & Kullanıcı Ayarları"
+        class="w-9 h-9 rounded-full bg-gradient-to-tr from-neonPurple via-neonPink to-neonCyan p-[2px] active:scale-95 transition"
+      >
+        <div id="headerAvatarInitials" class="w-full h-full rounded-full bg-ytSurface flex items-center justify-center text-xs font-extrabold text-white">
+          MZ
+        </div>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================================================================
+       ANA YERLEŞİM: SOL YAN MENÜ (MASAÜSTÜ) + İÇERİK ALANI
+  ==================================================================== -->
+  <div class="flex-1 flex min-h-0">
+
+    <!-- 2A. SOL YAN MENÜ (MASAÜSTÜ) -->
+    <aside
+      id="desktopSidebar"
+      class="hidden lg:flex flex-col justify-between w-60 shrink-0 bg-ytBg border-r border-white/10 px-3 py-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto transition-all duration-200"
+    >
+      <div class="space-y-1.5">
+        <button
+          data-page="home"
+          class="nav-item-desktop w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-bold bg-white/10 text-white transition"
+        >
+          <i data-lucide="home" class="w-5 h-5 text-neonCyan shrink-0"></i>
+          <span class="sidebar-label truncate">Ana Sayfa</span>
+        </button>
+
+        <button
+          data-page="explore"
+          class="nav-item-desktop w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition"
+        >
+          <i data-lucide="compass" class="w-5 h-5 shrink-0"></i>
+          <span class="sidebar-label truncate">Keşfet</span>
+        </button>
+
+        <button
+          data-page="library"
+          class="nav-item-desktop w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition"
+        >
+          <i data-lucide="library" class="w-5 h-5 shrink-0"></i>
+          <span class="sidebar-label truncate">Kitaplığım</span>
+        </button>
+
+        <button
+          data-page="upload"
+          class="nav-item-desktop w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition"
+        >
+          <i data-lucide="plus-circle" class="w-5 h-5 text-neonPurple shrink-0"></i>
+          <span class="sidebar-label truncate">Yükle</span>
+        </button>
+
+        <div class="pt-4 mt-4 border-t border-white/10 sidebar-label">
+          <div class="px-4 mb-2 flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Çalma Listeleri</span>
+            <button id="sidebarNewPlaylistBtn" type="button" title="Yeni Liste Oluştur" class="text-neonCyan hover:opacity-80">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div id="sidebarPlaylistList" class="space-y-1"></div>
+        </div>
+      </div>
+
+      <!-- Alt Bilgi Kutusu -->
+      <div class="sidebar-label p-3.5 rounded-2xl bg-gradient-to-br from-ytCard to-ytSurface border border-white/10 space-y-1.5">
+        <div class="flex items-center gap-2 text-xs font-bold text-neonCyan">
+          <i data-lucide="hard-drive" class="w-4 h-4"></i>
+          <span>Çevrimdışı & Kalıcı</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          Yüklenen ve indirilen tüm medya dosyaları IndexedDB üzerinde kalıcı saklanır.
+        </p>
+      </div>
+    </aside>
+
+    <!-- ANA İÇERİK GÖRÜNÜMLERİ -->
+    <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 pt-5 pb-40 max-w-7xl mx-auto">
+
+      <!-- ===============================================================
+           SAYFA 1: ANA SAYFA (YOUTUBE MUSIC TARZI BÖLÜMLER)
+      ================================================================ -->
+      <section id="page-home" class="app-page space-y-8">
+        <!-- Yatay Kaydırılabilir Ruh Hali / Tür Çipleri -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          <button data-chip="Tümü" class="mood-chip shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-white text-black transition">
+            Tümü
+          </button>
+          <button data-chip="Enerjik" class="mood-chip shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-ytCard hover:bg-ytHover text-slate-200 border border-white/10 transition">
+            ⚡ Enerjik
+          </button>
+          <button data-chip="Odaklanma" class="mood-chip shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-ytCard hover:bg-ytHover text-slate-200 border border-white/10 transition">
+            🎧 Odaklanma
+          </button>
+          <button data-chip="Gece Sürüşü" class="mood-chip shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-ytCard hover:bg-ytHover text-slate-200 border border-white/10 transition">
+            🌃 Gece Sürüşü
+          </button>
+          <button data-chip="Spor" class="mood-chip shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-ytCard hover:bg-ytHover text-slate-200 border border-white/10 transition">
+            🔥 Spor
+          </button>
+          <button data-chip="Video Klipler" class="mood-chip shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-ytCard hover:bg-ytHover text-slate-200 border border-white/10 transition">
+            🎬 Video Klipler
+          </button>
+          <button data-chip="Yeni Yüklenenler" class="mood-chip shrink-0 px-4 py-2 rounded-xl text-xs font-semibold bg-ytCard hover:bg-ytHover text-slate-200 border border-white/10 transition">
+            ✨ Yeni Yüklenenler
+          </button>
+        </div>
+
+        <!-- BÖLÜM A: HIZLI SEÇİMLER (4 Sütunlu/Satırlı Kompakt Liste) -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-bold uppercase tracking-wider text-neonCyan">Bir şarkıdan radyo başlat</p>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-white">Hızlı Seçimler</h2>
+            </div>
+            <button id="playAllQuickBtn" type="button" class="px-3.5 py-1.5 rounded-full bg-ytCard hover:bg-ytHover border border-white/15 text-xs font-bold text-white transition">
+              Tümünü Çal
+            </button>
+          </div>
+
+          <div id="quickPicksGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5"></div>
+        </div>
+
+        <!-- BÖLÜM B: SİZİN İÇİN KARIŞIMLAR & YENİ YÜKLENENLER (Yatay Büyük Kartlar) -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-bold uppercase tracking-wider text-neonPurple">Sana özel seçkiler ve topluluk akışı</p>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-white">Sizin İçin Karışımlar & Yeni Yüklenenler</h2>
+            </div>
+            <button data-goto="upload" class="text-xs font-bold text-neonCyan hover:underline">
+              + Parça Yükle
+            </button>
+          </div>
+
+          <div id="mixesCarousel" class="flex gap-4 overflow-x-auto no-scrollbar pb-2"></div>
+        </div>
+
+        <!-- BÖLÜM C: MÜZİK VİDEOLARI (Geniş 16:9 Kartlar) -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-bold uppercase tracking-wider text-neonPink">HD Görsel Sahne & Klipler</p>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-white">Trend Müzik Videoları</h2>
+            </div>
+            <button data-goto="explore" class="text-xs font-bold text-slate-300 hover:text-white">
+              Tümünü Gör →
+            </button>
+          </div>
+
+          <div id="musicVideosGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           SAYFA 2: KEŞFET (RUH HALLERİ VE TÜRLER)
+      ================================================================ -->
+      <section id="page-explore" class="app-page hidden space-y-6">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-black text-white">Keşfet</h1>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Ruh hallerine, müzik türlerine ve video kliplere göre göz atın.</p>
+        </div>
+
+        <!-- Tür & Ruh Hali Renkli Kartları -->
+        <div id="genreCardsGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3"></div>
+
+        <!-- Seçili Türe Göre İçerik Listesi -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 id="exploreFilterHeading" class="text-lg font-extrabold text-white">Tüm Türler & Parçalar</h2>
+            <span id="exploreCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-ytCard border border-white/10 text-neonCyan">0 içerik</span>
+          </div>
+          <div id="exploreResultsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           SAYFA 3: KİTAPLIĞIM (YÜKLENENLER, İNDİRİLENLER, BEĞENİLENLER, LİSTELER)
+      ================================================================ -->
+      <section id="page-library" class="app-page hidden space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white">Kitaplığım</h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Çevrimdışı indirilenler, cihazdan yükledikleriniz ve çalma listeleriniz.</p>
+          </div>
+          <button
+            id="createPlaylistLibraryBtn"
+            type="button"
+            class="px-4 py-2 rounded-full bg-neonPurple/20 hover:bg-neonPurple/30 text-neonPurple border border-neonPurple/40 text-xs font-bold flex items-center gap-1.5 transition"
+          >
+            <i data-lucide="list-plus" class="w-4 h-4"></i>
+            <span>Yeni Çalma Listesi</span>
+          </button>
+        </div>
+
+        <!-- Kitaplık Alt Sekmeleri -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          <button data-libtab="downloaded" class="lib-tab-btn shrink-0 px-4 py-2 rounded-full text-xs font-bold bg-neonCyan text-slate-950 transition">
+            📥 İndirilenler / Çevrimdışı
+          </button>
+          <button data-libtab="uploaded" class="lib-tab-btn shrink-0 px-4 py-2 rounded-full text-xs font-semibold bg-ytCard text-slate-300 border border-white/10 transition">
+            ☁️ Yüklenenler
+          </button>
+          <button data-libtab="liked" class="lib-tab-btn shrink-0 px-4 py-2 rounded-full text-xs font-semibold bg-ytCard text-slate-300 border border-white/10 transition">
+            ❤️ Beğenilen Şarkılar
+          </button>
+          <button data-libtab="playlists" class="lib-tab-btn shrink-0 px-4 py-2 rounded-full text-xs font-semibold bg-ytCard text-slate-300 border border-white/10 transition">
+            🎶 Çalma Listeler
